@@ -1,0 +1,73 @@
+name: Execute SQL Uploads
+
+on:
+  push:
+    paths:
+      - '.github/sql_uploads/**'
+
+jobs:
+  request_approval:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install sendgrid
+
+    - name: Send approval request
+      env:
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        APPROVAL_EMAIL: ${{ secrets.APPROVAL_EMAIL }}
+      run: |
+        for file in .github/sql_uploads/*.sql .github/sql_uploads/*.txt; do
+          if [ -f "$file" ]; then
+            echo "Sending approval request for $file"
+            python .github/scripts/send_approval_request.py "$file"
+          fi
+        done
+
+    - name: Await approval
+      uses: hmarr/await-approval@v1
+      with:
+        custom: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  execute_sql_uploads:
+    needs: request_approval
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install snowflake-connector-python
+
+    - name: Execute SQL Uploads
+      env:
+        SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+        SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+        SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+        SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+        SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+        SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      run: |
+        for file in .github/sql_uploads/*.sql .github/sql_uploads/*.txt; do
+          if [ -f "$file" ]; then
+            echo "Processing $file"
+            python .github/scripts/execute_snowflake_script.py "$file"
+          fi
+        done
