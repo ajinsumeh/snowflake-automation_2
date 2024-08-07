@@ -12,6 +12,7 @@ warehouse = os.environ['SNOWFLAKE_WAREHOUSE']
 database = os.environ['SNOWFLAKE_DATABASE']
 
 def remove_comments(sql):
+    """Remove comments from SQL code."""
     # Remove inline comments
     sql = re.sub(r'--.*$', '', sql, flags=re.MULTILINE)
     # Remove multi-line comments
@@ -19,8 +20,9 @@ def remove_comments(sql):
     return sql
 
 def execute_sql_file(file_path):
+    """Execute SQL queries from a file."""
     print(f"Processing file: {file_path}")
-    
+
     # Connect to Snowflake
     conn = snowflake.connector.connect(
         account=account,
@@ -33,27 +35,27 @@ def execute_sql_file(file_path):
 
     try:
         cursor = conn.cursor()
-        
+
         # Read SQL from file
         with open(file_path, 'r') as file:
             sql_queries = file.read()
-        
+
         print(f"Original SQL:\n{sql_queries}")
-        
+
         # Remove comments and split into individual queries
         sql_queries = remove_comments(sql_queries)
         print(f"SQL after removing comments:\n{sql_queries}")
-        
+
         queries = [q.strip() for q in sql_queries.split(';') if q.strip()]
-        
+
         print(f"Queries to execute: {queries}")
-        
+
         # Execute SQL queries
         for query in queries:
             print(f"Executing query: {query}")
-            cursor.execute(query) 
+            cursor.execute(query)
             print("Query executed successfully")
-        
+
         print(f"All queries in {file_path} executed successfully")
 
     except snowflake.connector.errors.ProgrammingError as e:
