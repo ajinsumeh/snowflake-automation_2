@@ -51,7 +51,7 @@ def execute_sql_file(file_path):
         # Execute SQL queries
         for query in queries:
             print(f"Executing query: {query}")
-            cursor.execute(query)
+            cursor.execute(query) 
             print("Query executed successfully")
         
         print(f"All queries in {file_path} executed successfully")
