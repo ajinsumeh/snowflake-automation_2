@@ -2,14 +2,14 @@ name: Execute SQL Scripts
 on:
   push:
     paths:
-      - 'sql_script/**'
+      - 'sql_script/**'  
 jobs:
   execute_sql_scripts:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
-        fetch-depth: 2  # To get the previous commit for diff
+        fetch-depth: 2
 
     - name: Use Python
       uses: actions/setup-python@v2
@@ -30,14 +30,14 @@ jobs:
         SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
         SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       run: |
-        # Get list of changed files in this push
-        CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.github/sql_script/.*\.(sql|txt)$' || true)
+        # Modified grep pattern to match your repository structure
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E 'sql_script/.*\.(sql|txt)$' || true)
         
         if [ ! -z "$CHANGED_FILES" ]; then
           for file in $CHANGED_FILES; do
             if [ -f "$file" ]; then
               echo "Processing changed file: $file"
-              python .github/scripts/execute_snowflake_script.py "$file"
+              python scripts/execute_snowflake_script.py "$file"  # Updated path to match your structure
             fi
           done
         else
