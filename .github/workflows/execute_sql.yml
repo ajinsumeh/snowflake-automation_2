@@ -31,7 +31,7 @@ jobs:
         SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       run: |
         # Get list of changed files in this push
-        CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.github/sql_script/.*\.(sql|txt)$' || true)
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.github/sql_scripts/.*\.(sql|txt)$' || true)
         
         if [ ! -z "$CHANGED_FILES" ]; then
           for file in $CHANGED_FILES; do
