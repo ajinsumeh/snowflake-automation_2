@@ -2,7 +2,7 @@ name: Execute SQL Scripts
 on:
   push:
     paths:
-      - '/sql_script/**'
+      - 'sql_script/**'
 jobs:
   execute_sql_scripts:
     runs-on: ubuntu-latest
