@@ -2,7 +2,7 @@ name: Execute SQL Scripts
 on:
   push:
     paths:
-      - '.github/sql_script/**'
+      - '.github/sql_scripts/**'
 jobs:
   execute_sql_scripts:
     runs-on: ubuntu-latest
