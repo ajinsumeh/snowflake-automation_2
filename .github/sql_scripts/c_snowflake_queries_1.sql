@@ -1,1 +1,1 @@
-insert into GITHUB_REPO.TEST.EMPLOYEE2 values (14,'Ajin','Y');
+insert into GITHUB_REPO.TEST.EMPLOYEE2 values (15,'Ajin','Y');
