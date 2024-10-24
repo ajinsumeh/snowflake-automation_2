@@ -13,7 +13,7 @@ def remove_comments(sql):
 def execute_sql_file(file_path):
     print(f"Processing file: {file_path}")
     
-    # Connect to Snowflake
+    # I create a connection to SF with the credentials provided
     conn = snowflake.connector.connect(
         account=os.environ['SNOWFLAKE_ACCOUNT'],
         user=os.environ['SNOWFLAKE_USER'],
@@ -23,9 +23,10 @@ def execute_sql_file(file_path):
         database=os.environ['SNOWFLAKE_DATABASE']
     )
     try:
+        #Cursors help in executing snowflake files
         cursor = conn.cursor()
         
-        # Read SQL from file
+        # Read content SQL from file
         with open(file_path, 'r') as file:
             sql_queries = file.read()
         
@@ -34,11 +35,13 @@ def execute_sql_file(file_path):
         # Remove comments and split into individual queries
         sql_queries = remove_comments(sql_queries)
         print(f"SQL after removing comments:\n{sql_queries}")
-        
+
+        # If there are multiple queries in a single file, it is split with ';' delimiter and put into a list
         queries = [q.strip() for q in sql_queries.split(';') if q.strip()]
         
-        # Execute SQL queries
+        # Execute SQL queries providing both index i.e the query order
         for i, query in enumerate(queries, 1):
+            # I am printing the query and executing it one by one
             print(f"Query {i} is: {query}")
             print(f"Executing query: {query}")
             cursor.execute(query)
@@ -47,14 +50,14 @@ def execute_sql_file(file_path):
         print(f"All queries in {file_path} executed successfully")
     except snowflake.connector.errors.ProgrammingError as e:
         print(f"Error executing SQL from {file_path}: {e}")
-        raise  # Re-raise the error to fail the GitHub Action
+        raise # fails the github action
     finally:
         cursor.close()
         conn.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python execute_snowflake_script.py <sql_file_path>")
+    if len(sys.argv) != 2: # exactly 1 argument
+        print("execute_snowflake_script.py <sql_file_path>")
         sys.exit(1)
     
     sql_file_path = sys.argv[1]
