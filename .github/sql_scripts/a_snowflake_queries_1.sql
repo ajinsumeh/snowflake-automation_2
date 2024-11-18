@@ -1,1 +1,0 @@
-insert into TEST_DATABASE.GIT_FETCH.EMPLOYEE values (3,'Ajin');
