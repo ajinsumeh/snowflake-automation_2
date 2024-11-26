@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - '.github/sql_script/**'
+      - '.github/sql_scripts/**'
 
 jobs:
   analyze-and-add-reviewer:
