@@ -1,0 +1,43 @@
+name: Add Reviewer for CREATE Statements
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - '.github/sql_script/**'
+
+jobs:
+  analyze-and-add-reviewer:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Analyze SQL files for CREATE statements
+      id: analyze_sql
+      run: |
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.sql$' || true)
+        echo "Changed SQL files: $CHANGED_FILES"
+        if [ ! -z "$CHANGED_FILES" ]; then
+          for file in $CHANGED_FILES; do
+            echo "Checking file: $file"
+            if grep -iq 'CREATE ' "$file"; then
+              echo "Found CREATE statement in $file"
+              echo "add_reviewer=true" >> $GITHUB_ENV
+              break
+            fi
+          done
+        fi
+
+    - name: Add Reviewer via GitHub API
+      if: env.add_reviewer == 'true'
+      run: |
+        PR_NUMBER=${{ github.event.pull_request.number }}
+        REPO=${{ github.repository }}
+        REVIEWER="Notyou1231" # Replace with the GitHub username of the reviewer
+        curl -X POST \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/requested_reviewers \
+          -d "{\"reviewers\":[\"$REVIEWER\"]}"
