@@ -32,19 +32,22 @@ def check_exists(sql_script):
         
         # Check database
         cursor.execute(f"SELECT COUNT(*) FROM SNOWFLAKE.INFORMATION_SCHEMA.DATABASES WHERE DATABASE_NAME = '{database}'")
-        if cursor.fetchone()[0] == 0:
+        db_exists = cursor.fetchone()[0]
+        if db_exists == 0:
             warnings.append(f"Database {database} does not exist for the query: {table}")
             continue
 
         # Check schema
         cursor.execute(f"SELECT COUNT(*) FROM {database}.INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{schema}'")
-        if cursor.fetchone()[0] == 0:
+        schema_exists = cursor.fetchone()[0]
+        if schema_exists == 0:
             warnings.append(f"Schema {schema} does not exist in database {database} for the query: {table}")
             continue
 
         # Check table
         cursor.execute(f"SELECT COUNT(*) FROM {database}.INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{table_name}'")
-        if cursor.fetchone()[0] == 0:
+        table_exists = cursor.fetchone()[0]
+        if table_exists == 0:
             warnings.append(f"Table {table_name} does not exist in schema {schema} of database {database} for the query: {table}")
     
     return warnings
@@ -54,6 +57,7 @@ if __name__ == "__main__":
     warnings = []
     
     for script in changed_files:
+        print(f"Checking file: {script}")
         warnings.extend(check_exists(script))
     
     if warnings:
