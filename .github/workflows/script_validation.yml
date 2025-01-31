@@ -1,38 +1,40 @@
 name: Table validations
-
 on:
   pull_request:
-  branches:
-    - main
+    branches:
+      - main    # Fixed indentation
     paths:
       - '.github/sql_scripts/**'
+
 jobs:
-    validate-sql-script:
-        runs-on:ubuntu-latest
+  validate-sql-script:
+    runs-on: ubuntu-latest    # Fixed syntax (removed colon)
     permissions:
-        pull-requests: write
-        contents: read
+      pull-requests: write
+      contents: read
+    
     steps:
       - uses: actions/checkout@v3
         with:
-            fetch-depth: 0
-      -name: Setting up my Python environment
-       uses: actions/setup-python@v3
+          fetch-depth: 0
+      
+      - name: Setting up my Python environment    # Fixed indentation and spacing after -name
+        uses: actions/setup-python@v3
         with:
-            python-version: '3.9'
-
-      -name: Install dependencies
-       run: |
-            python -m pip install --upgrade pip
-            pip install snowflake-connector-python
-            pip install PyGithub
-
-      -name: Getting my changed files in a particular Pull Request
+          python-version: '3.9'
+      
+      - name: Install dependencies    # Fixed indentation and spacing after -name
+        run: |
+          python -m pip install --upgrade pip
+          pip install snowflake-connector-python
+          pip install PyGithub
+      
+      - name: Getting my changed files in a particular Pull Request    # Fixed indentation
         id: changed-files
         run: |
-        files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '^.github/sql_scripts/' || true)
+          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '^.github/sql_scripts/' || true)
           echo "files=$files" >> $GITHUB_OUTPUT
-
+      
       - name: Validate SQL Objects
         if: steps.changed-files.outputs.files != ''
         env:
