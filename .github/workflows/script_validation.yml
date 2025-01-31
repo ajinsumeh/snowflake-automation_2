@@ -42,7 +42,7 @@ jobs:
           for file in ${{ steps.changed-files.outputs.files }}; do
             echo "Validating $file"
             
-            output=$(python .github/script/validate_snowflake_script.py "$file")
+            output=$(python .github/scripts/validate_snowflake_script.py "$file")
             exit_code=$?
             
             # Prepare comment body
