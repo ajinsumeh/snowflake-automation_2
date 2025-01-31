@@ -31,4 +31,4 @@ jobs:
     
     - name: Run SQL Checker
       run: |
-        python .github/scripts/validate_sql_scripts.py "${{ steps.changes.outputs.files }}"
+        python .github/scripts/validate_snowflake_scripts.py "${{ steps.changes.outputs.files }}"
