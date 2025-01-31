@@ -2,6 +2,8 @@ name: Table validations
 
 on:
   pull_request:
+  branches:
+    - main
     paths:
       - '.github/sql_scripts/**'
 jobs:
