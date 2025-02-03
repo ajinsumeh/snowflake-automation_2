@@ -26,9 +26,14 @@ jobs:
       - name: Identify changed SQL files
         id: files
         run: |
-          # List changed files between the current and previous commit using the GitHub context variables
-          echo "Changed files in this commit:"
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+          # Ensure we are comparing with the previous commit, falling back to HEAD if not available
+          if [ -z "${{ github.event.before }}" ]; then
+            echo "No previous commit found. Using HEAD."
+            git diff --name-only HEAD > changed_files.txt
+          else
+            echo "Using previous commit reference."
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+          fi
           cat changed_files.txt
 
           # Find the first SQL file changed
