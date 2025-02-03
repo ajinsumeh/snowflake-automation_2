@@ -1,9 +1,9 @@
-name: Check Db/Schema/table
+name: Check Snowflake Table Existence
 
 on:
   push:
     paths:
-      - '.github/sql_scripts/**.sql'  
+      - '.github/sql_scripts/**.sql'
 
 jobs:
   check-existence:
@@ -23,10 +23,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install snowflake-connector-python
 
-      - name: Run script to check table existence
+      - name: Identify changed SQL files
+        id: files
         run: |
-          python .github/scripts/check_existence.py  
+          # List changed files (including those in the sql_scripts folder) in the current commit
+          echo "Changed files in this commit:"
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+          cat changed_files.txt
+          
+          # Find the first SQL file changed
+          SQL_FILE=$(grep -m 1 '.sql' changed_files.txt)
+          echo "SQL file to process: $SQL_FILE"
+          echo "SQL_FILE=$SQL_FILE" >> $GITHUB_ENV  # Set this as an environment variable to pass to the next steps
+
+      - name: Run Python script to check table existence
+        run: |
+          python .github/scripts/check_existence.py  ${{ env.SQL_FILE }}  
         env:
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+
