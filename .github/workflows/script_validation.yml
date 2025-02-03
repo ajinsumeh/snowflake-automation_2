@@ -26,15 +26,16 @@ jobs:
       - name: Identify changed SQL files
         id: files
         run: |
-          # List changed files (including those in the sql_scripts folder) in the current commit
+          # List changed files in the current commit and previous commit (HEAD~1)
           echo "Changed files in this commit:"
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+          git diff --name-only HEAD~1 HEAD > changed_files.txt
           cat changed_files.txt
-          
+      
           # Find the first SQL file changed
           SQL_FILE=$(grep -m 1 '.sql' changed_files.txt)
           echo "SQL file to process: $SQL_FILE"
           echo "SQL_FILE=$SQL_FILE" >> $GITHUB_ENV  # Set this as an environment variable to pass to the next steps
+
 
       - name: Run Python script to check table existence
         run: |
