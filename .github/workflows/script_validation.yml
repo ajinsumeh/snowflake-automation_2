@@ -25,7 +25,7 @@ jobs:
 
       - name: Run script to check table existence
         run: |
-          python check_existence.py  
+          python .github/scripts/check_existence.py  
         env:
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
