@@ -31,6 +31,7 @@ def validate_query(conn, query: str) -> Tuple[bool, str]:
     """Validate a single query using EXPLAIN plan."""
     try:
         cursor = conn.cursor()
+        #print("Testing query:"+query)
         explain_query = f"EXPLAIN USING TEXT {query}"
         cursor.execute(explain_query)
         result = cursor.fetchall()
@@ -73,12 +74,13 @@ def main():
         
         # Validate each query
         for i, query in enumerate(queries, 1):
+            print("Checking query:"+query)
             valid, message = validate_query(conn, query)
             if not valid:
-                print(f"Error in query #{i}: {message}")
+                print(f"Error in query {i}: {message}")
                 has_errors = True
             else:
-                print(f"Query #{i} is valid")
+                print(f"Query {i} is valid")
 
     conn.close()
     
