@@ -1,50 +1,24 @@
-name: Check Snowflake Table Existence
+name: Extract Tables from SQL
 
 on:
   push:
-    paths:
-      - '.github/sql_scripts/**.sql'  # Monitor SQL files in the 'sql_scripts' folder
+    branches:
+      - main  # Change this to your working branch if needed
 
 jobs:
-  check-existence:
+  extract-tables:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.x'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install snowflake-connector-python
+      - name: Install Dependencies
+        run: pip install sqlparse
 
-      - name: Identify changed SQL files
-        id: files
-        run: |
-          # Ensure we are comparing with the previous commit, falling back to HEAD if not available
-          if [ -z "${{ github.event.before }}" ]; then
-            echo "No previous commit found. Using HEAD."
-            git diff --name-only HEAD > changed_files.txt
-          else
-            echo "Using previous commit reference."
-            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
-          fi
-          cat changed_files.txt
-
-          # Find the first SQL file changed
-          SQL_FILE=$(grep -m 1 '.sql' changed_files.txt)
-          echo "SQL file to process: $SQL_FILE"
-          echo "SQL_FILE=$SQL_FILE" >> $GITHUB_ENV  # Set this as an environment variable to pass to the next steps
-
-      - name: Run Python script to check table existence
-        run: |
-          python .github/scripts/check_existence.py ${{ env.SQL_FILE }}  # Pass the changed SQL file to the Python script
-        env:
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      - name: Run SQL Extraction Script
+        run: python .github/scripts/extract_tables.py
