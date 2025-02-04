@@ -1,66 +1,60 @@
-import re
-import snowflake.connector
 import os
+import sys
+import re
+import sqlparse
 
-SNOWFLAKE_USER = os.getenv("SNOWFLAKE_USER")
-SNOWFLAKE_PASSWORD = os.getenv("SNOWFLAKE_PASSWORD")
-SNOWFLAKE_ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
+def remove_comments(sql):
+    """Removes -- and /* */ comments from SQL script."""
+    sql = re.sub(r'--.*', '', sql)  # Remove single-line comments
+    sql = re.sub(r'/\*.*?\*/', '', sql, flags=re.DOTALL)  # Remove multi-line comments
+    return sql
 
-# Connect to Snowflake
-def get_snowflake_connection():
-    return snowflake.connector.connect(
-        user=SNOWFLAKE_USER,
-        password=SNOWFLAKE_PASSWORD,
-        account=SNOWFLAKE_ACCOUNT
-    )
+def split_queries(sql):
+    """Splits SQL script into individual queries using ; as a separator."""
+    return [q.strip() for q in sqlparse.split(sql) if q.strip()]
 
-def check_exists(db, schema, table):
-    with get_snowflake_connection() as conn:
-        cursor = conn.cursor()
-        # Check if database exists
-        cursor.execute(f"SHOW DATABASES LIKE '{db}'")
-        if not cursor.fetchone():
-            return f"Database '{db}' does not exist"
-        
-        cursor.execute(f"SHOW SCHEMAS IN DATABASE {db} LIKE '{schema}'")
-        if not cursor.fetchone():
-            return f"Schema '{schema}' does not exist in database '{db}'"
-        
-        # Check if table exists in the schema
-        cursor.execute(f"SHOW TABLES IN SCHEMA {db}.{schema} LIKE '{table}'")
-        if not cursor.fetchone():
-            return f"Table '{table}' does not exist in schema '{schema}' of database '{db}'"
-        
-    return f"Table '{db}.{schema}.{table}' exists"
+def extract_table_names(queries):
+    """Extracts table names based on 'FROM db.schema.table' pattern."""
+    table_pattern = re.compile(r'from\s+([\w.]+)', re.IGNORECASE)
+    table_list = []
 
-# Extract table references (FROM db.schema.table) from SQL file
-def extract_table_references(sql_file_path):
-    with open(sql_file_path, 'r') as file:
-        content = file.read()
+    for query in queries:
+        matches = table_pattern.findall(query)
+        if matches:
+            table_list.extend(matches)
+
+    return list(set(table_list))  # Remove duplicates
+
+def process_sql_file(file_path):
+    """Reads and processes a single SQL file."""
+    with open(file_path, "r") as f:
+        sql_script = f.read()
+
+    cleaned_sql = remove_comments(sql_script)
+    queries = split_queries(cleaned_sql)
+    table_names = extract_table_names(queries)
+
+    return file_path, table_names
+
+def main():
+    if len(sys.argv) < 2:
+        print("No changed SQL files provided.")
+        return
+
+    changed_files = sys.argv[1].split()  # Read files from command-line args
     
-    # Regular expression to find table references (e.g., FROM db.schema.table)
-    pattern = r"FROM\s+([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)"
-    return re.findall(pattern, content)
+    all_tables = {}
 
-# Main function to check the existence of all tables in the SQL file
-def check_sql_file_existence(sql_file_path):
-    table_references = extract_table_references(sql_file_path)
-    results = []
-    
-    for db, schema, table in table_references:
-        result = check_exists(db, schema, table)
-        results.append(result)
-    
-    return results
+    for sql_file in changed_files:
+        if os.path.exists(sql_file):  # Ensure file exists before processing
+            file_path, tables = process_sql_file(sql_file)
+            all_tables[file_path] = tables
+        else:
+            print(f"Warning: {sql_file} not found.")
+
+    print("Extracted Table Names from Changed Files:")
+    for file, tables in all_tables.items():
+        print(f"{file}: {tables}")
 
 if __name__ == "__main__":
-    # Get the file path passed as a command-line argument
-    if len(sys.argv) < 2:
-        print("Please provide the path to the SQL file.")
-        sys.exit(1)
-    
-    sql_file_path = sys.argv[1]  # The path to the SQL file provided as a command-line argument
-
-    results = check_sql_file_existence(sql_file_path)
-    for result in results:
-        print(result)
+    main()
