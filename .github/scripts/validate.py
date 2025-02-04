@@ -35,7 +35,7 @@ def validate_query(conn, query: str) -> Tuple[bool, str]:
         cursor.execute(explain_query)
         result = cursor.fetchall()
         cursor.close()
-        return True, "Query is valid"
+        return True, "Query:"+query+ "is valid"
     except Exception as e:
         return False, str(e)
 
