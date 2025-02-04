@@ -1,1 +1,0 @@
-select * from TEST_DATABASE.GIT_FETCH.EMPLOYEE;
