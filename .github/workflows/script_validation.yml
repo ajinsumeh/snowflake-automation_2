@@ -1,35 +1,40 @@
-name: Extract Tables from SQL on Push
+name: SQL Validation Workflow
 
 on:
   push:
-    branches:
-      - main  # Change if needed
     paths:
-      - '.github/sql_scripts/**/*.sql'  # Trigger only when SQL files change in this director
+      - '.github/sql_scripts/**'
 
 jobs:
-  extract-tables:
+  validate-sql:
     runs-on: ubuntu-latest
+    
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
-          python-version: '3.x'
+          fetch-depth: 2  # Required to get file changes
 
-      - name: Install Dependencies
-        run: pip install sqlparse
-
-      - name: Get Changed SQL Files
+      - name: Get changed files
         id: changed-files
         run: |
-          CHANGED_FILES==$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '\.github/sql_script/.*\.(sql|txt)$' || true)
-          echo "Changed SQL Files: $CHANGED_FILES"
-          echo "sql_files=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "::set-output name=files::$(git diff --name-only HEAD^ HEAD | grep '^.github/sql_scripts/.*\.sql$' | tr '\n' ' ')"
 
-      - name: Run SQL Extraction Script
-        if: env.sql_files != ''
-        run: python .github/scripts/extract_tables.py "$sql_files"
-
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install snowflake-connector-python
+      
+      - name: Run SQL validation
+        run: python .github/scripts/validate.py ${{ steps.changed-files.outputs.files }}
