@@ -1,9 +1,11 @@
-name: Extract Tables from SQL
+name: Extract Tables from SQL on Push
 
 on:
   push:
     branches:
-      - main  # Change this to your working branch if needed
+      - main  # Change if needed
+    paths:
+      - '.github/sql_scripts/**/*.sql'  # Trigger only when SQL files change in this director
 
 jobs:
   extract-tables:
@@ -20,5 +22,13 @@ jobs:
       - name: Install Dependencies
         run: pip install sqlparse
 
+      - name: Get Changed SQL Files
+        id: changed-files
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep '\.sql$' || true)
+          echo "Changed SQL Files: $CHANGED_FILES"
+          echo "sql_files=$CHANGED_FILES" >> $GITHUB_ENV
+
       - name: Run SQL Extraction Script
+        if: env.sql_files != ''
         run: python .github/scripts/extract_tables.py
