@@ -1,0 +1,7 @@
+select * from TEST_DATABASE.GIT_FETCH.EMPLOYEE;
+
+select * from TEST_DATABASE.GIT_FETCH.EMPLOYEE1;
+
+insert into TEST_DATABASE.GIT_FETCH.EMPLOYEE2 values (1,'ABC');
+
+
