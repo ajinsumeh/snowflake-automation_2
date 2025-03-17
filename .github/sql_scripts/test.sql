@@ -1,1 +1,1 @@
-insert into GITHUB_AUTOMATION.GIT.GIT_TABLE('1','Ajin','Y');
+insert into GITHUB_AUTOMATION.GIT.GIT_TABLE values ('1','Ajin','Y');
